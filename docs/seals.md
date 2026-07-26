@@ -1,26 +1,34 @@
 # Receipt seals
 
 ## Algorithms
-| Alg | CLI | Files | Notes |
-|-----|-----|-------|-------|
-| **ed25519** (default) | `prove keys init` | `ed25519.sk`, `ed25519.pub` | Public key portable; multi-party ready |
-| hmac-sha256 | `prove keys init --alg hmac-sha256` | `hmac.key` | Symmetric local integrity |
+| Alg | Command | Notes |
+|-----|---------|-------|
+| ed25519 (default) | `prove keys init` | Public key portable; multi-party |
+| hmac-sha256 | `prove keys init --alg hmac-sha256` | Local symmetric |
 
-## Commands
-```bash
-prove keys init                 # ed25519
-prove keys init --alg hmac-sha256
-prove keys status
-prove keys pubkey               # ed25519 public hex
-```
-
-## Required seals
+## Multi-party quorum
 ```yaml
 safety:
   require_sealed_receipts: true
+  seal_quorum: 2
 ```
 
-## Seal payload
-HMAC/Ed25519 over `sha256("prove-receipt-v1" || canonical_unsigned_receipt_json)`.
+```bash
+# machine A
+prove keys init
+prove keys pubkey   # share public hex + key_id
 
-Ed25519 seals may include `public_key` on the receipt for handoff verification.
+# machine B
+prove keys init
+prove keys trust --key-id <A_id> --pubkey <A_hex>
+prove keys pubkey
+
+# A trusts B
+prove keys trust --key-id <B_id> --pubkey <B_hex>
+
+# after A seals a receipt:
+prove keys cosign .prove/receipts/rec_xxx.json   # on B
+# admit requires seal_quorum distinct valid signers
+```
+
+Trusted pubs live in `.prove/keys/trusted/<key_id>.pub`.

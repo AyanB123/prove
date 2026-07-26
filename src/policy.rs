@@ -49,7 +49,13 @@ pub struct Safety {
     /// Reject receipts that lack a valid local seal.
     #[serde(default)]
     pub require_sealed_receipts: bool,
+    /// Minimum distinct valid seal signers required (ed25519 multi-party). Default 1.
+    #[serde(default = "default_seal_quorum")]
+    pub seal_quorum: u32,
 }
+
+fn default_seal_quorum() -> u32 { 1 }
+
 
 fn default_timeout_secs() -> u64 { 900 }
 
@@ -88,6 +94,7 @@ impl Default for Policy {
                 allow_network: false,
                 command_timeout_secs: 900,
                 require_sealed_receipts: false,
+                seal_quorum: 1,
             },
         }
     }

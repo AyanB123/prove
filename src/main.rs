@@ -87,6 +87,25 @@ enum KeysCmd {
     Status,
     /// Print the local public key (ed25519) for multi-party handoff
     Pubkey,
+    /// Trust an ed25519 public key for quorum verification
+    Trust {
+        #[arg(long)]
+        key_id: String,
+        #[arg(long)]
+        pubkey: String,
+    },
+    /// Remove a trusted public key
+    Untrust {
+        #[arg(long)]
+        key_id: String,
+    },
+    /// List trusted public keys
+    Trusted,
+    /// Cosign an existing receipt JSON with the local ed25519 key
+    Cosign {
+        /// Path to receipt JSON under .prove/receipts
+        path: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -312,6 +331,47 @@ fn real_main() -> anyhow::Result<()> {
                     None => anyhow::bail!("no seal key — run `prove keys init --alg ed25519`"),
                 }
             }
+            KeysCmd::Trust { key_id, pubkey } => {
+                let store = ProveStore::discover(&cwd)?;
+                store.ensure_initialized()?;
+                let path = prove::seal::trust_key(&store.prove_dir, &key_id, &pubkey)?;
+                println!("{} trusted key_id={key_id} at {}", "✓".green().bold(), path.display());
+            }
+            KeysCmd::Untrust { key_id } => {
+                let store = ProveStore::discover(&cwd)?;
+                prove::seal::untrust_key(&store.prove_dir, &key_id)?;
+                println!("{} untrusted key_id={key_id}", "✓".green().bold());
+            }
+            KeysCmd::Trusted => {
+                let store = ProveStore::discover(&cwd)?;
+                let list = prove::seal::list_trusted(&store.prove_dir)?;
+                if list.is_empty() {
+                    println!("{} no trusted keys — prove keys trust --key-id ID --pubkey HEX", "·".yellow());
+                } else {
+                    for (id, pk) in list {
+                        println!("{id}  {}", &pk[..16.min(pk.len())]);
+                    }
+                }
+            }
+            KeysCmd::Cosign { path } => {
+                let store = ProveStore::discover(&cwd)?;
+                let key = prove::seal::LocalKey::load(&store.prove_dir)?
+                    .ok_or_else(|| anyhow::anyhow!("no local key — prove keys init --alg ed25519"))?;
+                let p = std::path::PathBuf::from(&path);
+                let p = if p.is_absolute() { p } else { cwd.join(p) };
+                let text = std::fs::read_to_string(&p)?;
+                let mut receipt: prove::receipts::Receipt = serde_json::from_str(&text)?;
+                let mut unsigned = receipt.clone();
+                unsigned.seal = None;
+                unsigned.receipt_id = String::new();
+                let body = serde_json::to_vec(&unsigned)?;
+                let payload = prove::seal::sealing_payload(&body);
+                let mut seal = receipt.seal.take().ok_or_else(|| anyhow::anyhow!("receipt has no seal to cosign"))?;
+                key.cosign(&mut seal, &payload)?;
+                receipt.seal = Some(seal);
+                std::fs::write(&p, serde_json::to_string_pretty(&receipt)?)?;
+                println!("{} cosigned {} with {}", "✓".green().bold(), p.display(), key.key_id());
+            }
         },
     }
     Ok(())
@@ -468,5 +528,6 @@ fn find_prove_source_root(start: &std::path::Path) -> anyhow::Result<PathBuf> {
         }
     }
 }
+
 
 

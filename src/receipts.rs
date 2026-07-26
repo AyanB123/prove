@@ -702,28 +702,52 @@ pub fn verify_receipt_seal(prove_dir: &Path, receipt: &Receipt, require: bool) -
         }
         return Ok(());
     };
-    let key = crate::seal::LocalKey::load(prove_dir).map_err(|e| AdmitError {
-        kind: AdmitErrorKind::SealInvalid,
-        message: format!("failed to load seal key: {e}"),
-    })?;
-    let Some(key) = key else {
-        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("receipt has seal key_id={} but no local key is configured", seal.key_id) });
-    };
-    if seal.key_id != key.key_id() {
-        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("seal key_id mismatch: receipt={} local={}", seal.key_id, key.key_id()) });
-    }
     if seal.alg != "hmac-sha256" && seal.alg != "ed25519" {
-        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("unsupported seal alg {}", seal.alg) });
+        return Err(AdmitError {
+            kind: AdmitErrorKind::SealInvalid,
+            message: format!("unsupported seal alg {}", seal.alg),
+        });
     }
     let mut unsigned = receipt.clone();
     unsigned.seal = None;
     unsigned.receipt_id = String::new();
     let body = serde_json::to_vec(&unsigned).unwrap_or_default();
     let payload = crate::seal::sealing_payload(&body);
-    if !key.verify_hex(&payload, &seal.signature) {
-        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: "receipt seal signature invalid (tamper suspected)".into() });
+
+    let valid = crate::seal::count_valid_signers(prove_dir, seal, &payload).map_err(|e| {
+        AdmitError {
+            kind: AdmitErrorKind::SealInvalid,
+            message: format!("seal verification error: {e}"),
+        }
+    })?;
+
+    // Load quorum from policy file if present (default 1)
+    let quorum = {
+        let policy_path = prove_dir.join("policy.yml");
+        if policy_path.exists() {
+            crate::policy::Policy::load(&policy_path)
+                .map(|p| p.safety.seal_quorum.max(1))
+                .unwrap_or(1)
+        } else {
+            1
+        }
+    };
+
+    if valid == 0 {
+        return Err(AdmitError {
+            kind: AdmitErrorKind::SealInvalid,
+            message: "no valid seal signatures (local/trusted keys)".into(),
+        });
     }
+    if valid < quorum as usize {
+        return Err(AdmitError {
+            kind: AdmitErrorKind::SealInvalid,
+            message: format!(
+                "seal quorum not met: valid_signers={valid} required={quorum} — cosign with trusted keys"
+            ),
+        });
+    }
+    let _ = require; // require already handled missing seal; quorum applies whenever seal present
     Ok(())
 }
-
 

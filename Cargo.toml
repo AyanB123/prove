@@ -1,6 +1,6 @@
 [package]
 name = "prove"
-version = "0.3.0"
+version = "0.3.2"
 edition = "2021"
 description = "Evidence-gated multi-CLI control plane for coding agents. Agents can claim. Only evidence can advance."
 license = "Apache-2.0"
@@ -27,6 +27,7 @@ rand = "0.8"
 
 [dev-dependencies]
 tempfile = "3"
+
 
 
 

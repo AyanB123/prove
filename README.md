@@ -9,7 +9,7 @@ Prove is a CLI-first control plane for coding agents. It sits above Claude Code,
 Not an IDE. Not a model. The reliability layer your agent stack is missing.
 
 ```text
-false-done rate:  naive 11/11  →  prove 0/11
+false-done rate:  naive 12/12  →  prove 0/12
 ```
 
 ---
@@ -31,7 +31,7 @@ Generation quality is commoditized. Claim admissibility is not.
 [45s demo (MP4)](demos/output/prove-demo-45s.mp4) · [GIF preview](demos/output/prove-demo-preview.gif)
 
 ```text
-false-done rate: naive 11/11 → prove 0/11
+false-done rate: naive 12/12 → prove 0/12
 ```
 
 ## 30-second demo
@@ -46,7 +46,7 @@ Trap fixture: visible unit tests pass. Hidden contract fails.
 ```bash
 cargo build --release
 ./target/release/prove eval traps
-# false-done rate: naive 11/11 → prove 0/11
+# false-done rate: naive 12/12 → prove 0/12
 ```
 
 Or the split scenario (Windows PowerShell / bash):
@@ -180,7 +180,7 @@ Public trap suite under `fixtures/traps`:
 | pr-refuses-without-done | Evidence export without done phase |
 
 ```text
-false-done rate: naive 11/11 → prove 0/11
+false-done rate: naive 12/12 → prove 0/12
 ```
 
 Run it yourself:
@@ -269,6 +269,7 @@ Interview packet: [docs/job-packet.md](docs/job-packet.md)
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
 
 
 

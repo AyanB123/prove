@@ -37,6 +37,7 @@ pub fn run_trap_suite(repo_root: &Path) -> Result<Vec<TrapResult>> {
     results.push(run_missing_test_blocks_review()?);
     results.push(run_repair_limit_stops_without_done(&trap)?);
     results.push(run_require_sealed_receipts_trap()?);
+    results.push(run_seal_quorum_trap()?);
 
     Ok(results)
 }
@@ -522,6 +523,40 @@ fn run_require_sealed_receipts_trap() -> Result<TrapResult> {
         prove_false_done: false,
         prove_blocked: blocked && sealed_ok,
         notes: format!("unsigned_blocked={blocked} sealed_ok={sealed_ok} mint_admit={admit_mint:?} re={re:?} re2={re2:?}"),
+    })
+}
+
+
+fn run_seal_quorum_trap() -> Result<TrapResult> {
+    use crate::seal::{self, LocalKey, SealAlg};
+    let tmp = tempfile_dir("quorum")?;
+    let a = tmp.join("a");
+    let b = tmp.join("b");
+    std::fs::create_dir_all(a.join(".prove")).ok();
+    std::fs::create_dir_all(b.join(".prove")).ok();
+    let ka = LocalKey::init(&a.join(".prove"), SealAlg::Ed25519)?;
+    let kb = LocalKey::init(&b.join(".prove"), SealAlg::Ed25519)?;
+    seal::trust_key(&a.join(".prove"), kb.key_id(), &kb.public_key_hex().unwrap())?;
+    // write policy quorum 2 on a
+    let mut policy = Policy::default();
+    policy.safety.seal_quorum = 2;
+    policy.safety.require_sealed_receipts = true;
+    policy.gates.test.commands = vec![vec!["python".into(), "-c".into(), "print(1)".into()]];
+    std::fs::create_dir_all(a.join(".prove")).ok();
+    policy.save(&a.join(".prove/policy.yml"))?;
+
+    let payload = seal::sealing_payload(b"{\"quorum\":true}");
+    let mut seal_one = ka.make_seal(&payload);
+    let n1 = seal::count_valid_signers(&a.join(".prove"), &seal_one, &payload)?;
+    kb.cosign(&mut seal_one, &payload)?;
+    let n2 = seal::count_valid_signers(&a.join(".prove"), &seal_one, &payload)?;
+    let blocked = n1 < 2 && n2 >= 2;
+    Ok(TrapResult {
+        name: "seal-quorum".into(),
+        naive_false_done: true,
+        prove_false_done: false,
+        prove_blocked: blocked,
+        notes: format!("signers_before={n1} after_cosign={n2}"),
     })
 }
 

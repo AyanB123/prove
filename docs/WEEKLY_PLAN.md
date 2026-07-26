@@ -1,30 +1,24 @@
-# Prove — plan status (live)
+# Prove — live plan
 
-## Product thesis (locked)
-Evidence-gated multi-CLI control plane. Agents claim; only receipts advance.
-
-## Completed phases
-| Phase | Status |
-|-------|--------|
-| Week 1–4 portfolio MVP | Done |
-| GitHub public repo + demo video | Done |
-| v0.2 CI Action + binaries + extension | Done |
-| v0.3 sandbox + required seals + webview | Done |
-| Ed25519 seals | Done |
+## Completed
+| Item | Status |
+|------|--------|
+| Proof-or-stop + multi-CLI | Done |
+| Trap eval (false-done) | **12/12 → 0** |
+| GitHub + releases | Done |
+| CI Action + sandbox | Done |
+| Extension + receipt webview | Done |
+| Ed25519 + multi-party quorum | Done |
 
 ## Metrics
 ```
-false-done: naive 11/11 → prove 0/11
-unit tests: 16 passed
-release: https://github.com/AyanB123/prove/releases/tag/v0.3.0
+false-done: naive 12/12 → prove 0/12
+unit tests: 17 passed
 ```
 
-## Next product options
-1. Multi-party ed25519 quorum seals
-2. VS Code marketplace publish packaging
-3. Team mission bus
-4. Human launch posts / job apps (parked)
+## Remaining
+1. Marketplace publish (human + packaging)
+2. Team mission bus (bigger product)
+3. Show HN / job apps (parked)
 
-## Human-only remaining
-- Show HN / LinkedIn / Twitter posts (`demos/SHOW_HN.md`)
-- Job applications (`docs/job-packet.md`)
+Repo: https://github.com/AyanB123/prove
