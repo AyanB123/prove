@@ -68,6 +68,19 @@ enum Commands {
         #[command(subcommand)]
         cmd: PolicyCmd,
     },
+    /// Manage local receipt sealing keys
+    Keys {
+        #[command(subcommand)]
+        cmd: KeysCmd,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum KeysCmd {
+    /// Generate a local HMAC key for sealing receipts (.prove/keys)
+    Init,
+    /// Show whether a local seal key is configured
+    Status,
 }
 
 #[derive(Subcommand, Debug)]
@@ -232,6 +245,22 @@ fn real_main() -> anyhow::Result<()> {
                 println!("{}", serde_yaml::to_string(&p)?);
                 println!("policy_hash: {}", p.policy_hash());
                 println!("command_set_hash: {}", p.command_set_hash());
+            }
+        },
+        Commands::Keys { cmd } => match cmd {
+            KeysCmd::Init => {
+                let store = ProveStore::discover(&cwd)?;
+                store.ensure_initialized()?;
+                let key = prove::seal::LocalKey::init(&store.prove_dir)?;
+                println!("{} seal key ready (key_id={}) at {}", "✓".green().bold(), key.key_id, key.path.display());
+                println!("{}", "New receipts will be HMAC-sealed. Keep .prove/keys/ private.".dimmed());
+            }
+            KeysCmd::Status => {
+                let store = ProveStore::discover(&cwd)?;
+                match prove::seal::LocalKey::load(&store.prove_dir)? {
+                    Some(k) => println!("{} seal key present key_id={} path={}", "✓".green().bold(), k.key_id, k.path.display()),
+                    None => println!("{} no seal key — run `prove keys init`", "·".yellow()),
+                }
             }
         },
     }

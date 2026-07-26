@@ -58,6 +58,8 @@ pub struct Receipt {
     pub commands: Vec<CommandResult>,
     pub producer: Producer,
     pub produced_at: DateTime<Utc>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seal: Option<crate::seal::ReceiptSeal>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -69,6 +71,7 @@ pub enum AdmitErrorKind {
     MissingReceipt,
     CommandSetMismatch,
     DeniedCommand,
+    SealInvalid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,6 +84,7 @@ impl Receipt {
     pub fn content_id(&self) -> String {
         let mut clone = self.clone();
         clone.receipt_id = String::new();
+        clone.seal = None;
         let bytes = serde_json::to_vec(&clone).unwrap_or_default();
         let mut h = Sha256::new();
         h.update(&bytes);
@@ -103,8 +107,25 @@ impl ReceiptStore {
     }
 
     pub fn save(&self, receipt: &Receipt) -> Result<PathBuf> {
+        let mut receipt = receipt.clone();
+        if receipt.seal.is_none() {
+            if let Some(prove_dir) = self.dir.parent() {
+                if let Ok(Some(key)) = crate::seal::LocalKey::load(prove_dir) {
+                    let mut for_hash = receipt.clone();
+                    for_hash.seal = None;
+                    for_hash.receipt_id = String::new();
+                    let body = serde_json::to_vec(&for_hash)?;
+                    let payload = crate::seal::sealing_payload(&body);
+                    receipt.seal = Some(crate::seal::ReceiptSeal {
+                        alg: "hmac-sha256".into(),
+                        key_id: key.key_id.clone(),
+                        signature: key.sign_hex(&payload),
+                    });
+                }
+            }
+        }
         let path = self.dir.join(format!("{}.json", receipt.receipt_id));
-        let json = serde_json::to_string_pretty(receipt)?;
+        let json = serde_json::to_string_pretty(&receipt)?;
         std::fs::write(&path, json)?;
         Ok(path)
     }
@@ -412,6 +433,7 @@ pub fn mint_test_receipt(
         commands,
         producer,
         produced_at: Utc::now(),
+        seal: None,
     };
     receipt.receipt_id = receipt.content_id();
     // Freshness is defined as "bound to the tree we just observed".
@@ -452,6 +474,7 @@ pub fn mint_patch_receipt(
         commands: vec![],
         producer,
         produced_at: Utc::now(),
+        seal: None,
     };
     receipt.receipt_id = receipt.content_id();
     Ok(receipt)
@@ -489,6 +512,7 @@ pub fn mint_review_receipt(
         commands,
         producer,
         produced_at: Utc::now(),
+        seal: None,
     };
     receipt.receipt_id = receipt.content_id();
     let admit = if checklist_ok {
@@ -507,6 +531,10 @@ pub fn admit_freshness(
     policy: &Policy,
     receipt: &Receipt,
 ) -> Result<(), AdmitError> {
+    let prove_dir = root.join(".prove");
+    if prove_dir.exists() {
+        verify_receipt_seal(&prove_dir, receipt)?;
+    }
     let state = git_state::capture_state(root).map_err(|e| AdmitError {
         kind: AdmitErrorKind::HashDrift,
         message: e.to_string(),
@@ -660,3 +688,30 @@ mod tests {
     }
 }
 
+
+
+pub fn verify_receipt_seal(prove_dir: &Path, receipt: &Receipt) -> Result<(), AdmitError> {
+    let Some(seal) = &receipt.seal else { return Ok(()); };
+    let key = crate::seal::LocalKey::load(prove_dir).map_err(|e| AdmitError {
+        kind: AdmitErrorKind::SealInvalid,
+        message: format!("failed to load seal key: {e}"),
+    })?;
+    let Some(key) = key else {
+        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("receipt has seal key_id={} but no local key is configured", seal.key_id) });
+    };
+    if seal.key_id != key.key_id {
+        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("seal key_id mismatch: receipt={} local={}", seal.key_id, key.key_id) });
+    }
+    if seal.alg != "hmac-sha256" {
+        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("unsupported seal alg {}", seal.alg) });
+    }
+    let mut unsigned = receipt.clone();
+    unsigned.seal = None;
+    unsigned.receipt_id = String::new();
+    let body = serde_json::to_vec(&unsigned).unwrap_or_default();
+    let payload = crate::seal::sealing_payload(&body);
+    if !key.verify_hex(&payload, &seal.signature) {
+        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: "receipt seal signature invalid (tamper suspected)".into() });
+    }
+    Ok(())
+}

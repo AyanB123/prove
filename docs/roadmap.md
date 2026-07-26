@@ -1,35 +1,27 @@
 # Roadmap
 
 ## v0.1 — shock MVP — DONE
-- [x] Lifecycle engine + receipts
-- [x] Local verify runner + policy
-- [x] local-loop + naive + external adapters
-- [x] Trap suite (false-done 10/10 → 0/10)
-- [x] PR evidence bundle
-- [x] Demo video + GitHub release
+- [x] Lifecycle + receipts + trap suite
+- [x] Multi-CLI adapters
+- [x] Demo video + GitHub
 
-## v0.2 — team CI surface — IN PROGRESS
+## v0.2 — team CI + IDE surface — DONE
 - [x] `prove verify --ci --json --require-done`
-- [x] GitHub Action `AyanB123/prove` (`action.yml`)
-- [x] In-repo CI workflow (test + self-verify)
-- [x] Release workflow (linux/mac/win binaries on tags)
-- [x] Example CI policies (`examples/`)
-- [ ] Richer TUI status (optional)
-- [x] Consume prebuilt release binary in Action (fallback to source)
+- [x] GitHub Action (prebuilt binary + source fallback)
+- [x] Release binaries (linux/win/mac-arm)
+- [x] VS Code/Cursor extension + VSIX
+- [x] Local HMAC receipt seals (`prove keys`)
 
-## v0.3 — IDE surface — IN PROGRESS`n- [x] VS Code / Cursor extension scaffold (`extensions/vscode-prove`)
-- [ ] Streaming backend logs
+## v0.3 — IDE polish
+- [ ] Richer receipt viewer / webview
+- [ ] Marketplace publish
+- [ ] Streaming backend logs in panel
 
-## v0.4
-- [ ] Stronger sandbox (OS-level)
-- [ ] Signed receipts
+## v0.4 — stronger trust
+- [ ] OS sandbox for gate commands
+- [ ] Ed25519 / required-seal policy
+- [ ] Key rotation
 
-## v0.5
-- [ ] Team policy server / shared mission bus
+## v0.5 — team
+- [ ] Shared mission bus / policy server
 - [ ] Cost accounting across backends
-
-## Later
-- Optional computer-use backend
-- Richer code graph
-- Hosted eval leaderboard
-

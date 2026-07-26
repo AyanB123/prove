@@ -6,4 +6,5 @@ pub mod memory;
 pub mod orchestrator;
 pub mod policy;
 pub mod receipts;
+pub mod seal;
 pub mod store;
