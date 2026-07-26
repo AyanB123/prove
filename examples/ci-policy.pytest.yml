@@ -1,0 +1,15 @@
+# Example CI policy for Python repos
+gates:
+  test:
+    commands:
+      - [python, -m, pytest, -q]
+    repair_limit: 0
+  review:
+    type: checklist
+    require: [tests_fresh]
+budgets:
+  max_steps: 5
+  max_minutes: 30
+safety:
+  deny_command_regex:
+    - "rm\\s+-rf\\s+/"

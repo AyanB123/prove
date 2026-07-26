@@ -80,3 +80,11 @@ unit tests: 12 passed
 5. Apply using `docs/job-packet.md` + `docs/APPLICATION_TARGETS.md`
 
 
+
+## v0.2 product (post-launch) — CI surface
+- [x] `prove verify --ci --json --require-done`
+- [x] GitHub Action (`action.yml`)
+- [x] `.github/workflows/ci.yml` + `release.yml`
+- [x] Example policies + `docs/github-action.md`
+- [ ] VS Code/Cursor panel (v0.3)
+- [ ] Sandbox + signed receipts (v0.4)

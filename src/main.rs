@@ -36,7 +36,17 @@ enum Commands {
     /// Show current mission status and evidence matrix
     Status,
     /// Re-run verify gates against HEAD (does not trust agent logs)
-    Verify,
+    Verify {
+        /// Exit non-zero when verification is rejected (for CI)
+        #[arg(long)]
+        ci: bool,
+        /// Emit PROVE_JSON:{...} machine-readable summary
+        #[arg(long)]
+        json: bool,
+        /// Also require active mission phase Done/PrReady + review receipt
+        #[arg(long)]
+        require_done: bool,
+    },
     /// Resume the active mission
     Resume,
     /// Export admissible PR evidence bundle (JSON + markdown); refuses if not done
@@ -148,10 +158,27 @@ fn real_main() -> anyhow::Result<()> {
             let mission = store.load_mission()?;
             orch.print_status(&mission)?;
         }
-        Commands::Verify => {
+        Commands::Verify {
+            ci,
+            json,
+            require_done,
+        } => {
             let store = ProveStore::discover(&cwd)?;
+            // CI can run with existing policy or auto-init defaults for greenfield.
+            if ci {
+                store.ensure_initialized()?;
+            } else {
+                store.require_initialized()?;
+            }
             let orch = Orchestrator::new(&store)?;
-            orch.verify_only()?;
+            let admitted = orch.verify_with_options(require_done, json)?;
+            if ci && !admitted {
+                eprintln!(
+                    "{}",
+                    "prove verify --ci: gates not admitted (exit 1)".red().bold()
+                );
+                std::process::exit(1);
+            }
         }
         Commands::Resume => {
             let store = ProveStore::discover(&cwd)?;
@@ -353,3 +380,4 @@ fn find_prove_source_root(start: &std::path::Path) -> anyhow::Result<PathBuf> {
         }
     }
 }
+

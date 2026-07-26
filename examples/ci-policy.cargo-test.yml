@@ -1,0 +1,18 @@
+# Example CI policy for Rust crates
+# Copy to .prove/policy.yml or pass as action input policy_path.
+
+gates:
+  test:
+    commands:
+      - [cargo, test, --quiet]
+    repair_limit: 0
+  review:
+    type: checklist
+    require: [diff_non_empty, tests_fresh, no_todo_marker]
+budgets:
+  max_steps: 5
+  max_minutes: 30
+safety:
+  deny_command_regex:
+    - "rm\\s+-rf\\s+/"
+    - "git\\s+push\\s+--force"

@@ -59,6 +59,22 @@ Or the split scenario (Windows PowerShell / bash):
 
 ---
 
+## CI (v0.2)
+
+```yaml
+- uses: AyanB123/prove@master
+  with:
+    policy_path: .prove/policy.yml
+```
+
+Local:
+
+```bash
+prove verify --ci --json
+```
+
+Full docs: [docs/github-action.md](docs/github-action.md)
+
 ## Install
 
 ```bash
@@ -244,6 +260,7 @@ Interview packet: [docs/job-packet.md](docs/job-packet.md)
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
 
 
 

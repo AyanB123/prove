@@ -1,11 +1,9 @@
-/target
-**/.prove
+/target/
+# Local mission state / receipts (keep committed policy template)
+.prove/**
+!.prove/policy.yml
 __pycache__/
 .pytest_cache/
 *.pyc
 .DS_Store
-
 demos/output/frames/
-*.pyc
-__pycache__/
-

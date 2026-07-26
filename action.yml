@@ -1,0 +1,78 @@
+name: Prove Verify
+description: Run Prove evidence gates on a repo (policy-bound tests). Agents can claim; only evidence advances.
+author: Prove Contributors
+branding:
+  icon: shield
+  color: purple
+
+inputs:
+  policy_path:
+    description: Path to policy.yml (default .prove/policy.yml). If missing, prove init writes defaults.
+    required: false
+    default: .prove/policy.yml
+  require_done:
+    description: Also require active mission phase Done/PrReady + review receipt
+    required: false
+    default: "false"
+  toolchain:
+    description: Rust toolchain for building Prove from source
+    required: false
+    default: stable
+  working_directory:
+    description: Repo subdirectory to verify
+    required: false
+    default: .
+  extra_args:
+    description: Extra args appended to prove verify
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: ${{ inputs.toolchain }}
+
+    - name: Cache cargo
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: ${{ github.action_path }}
+
+    - name: Build prove CLI
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        cargo build --release
+        echo "${{ github.action_path }}/target/release" >> "$GITHUB_PATH"
+        ./target/release/prove --version
+
+    - name: Ensure policy
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        set -euo pipefail
+        if [[ ! -f "${{ inputs.policy_path }}" ]]; then
+          echo "No ${{ inputs.policy_path }} — running prove init"
+          prove init
+        else
+          mkdir -p .prove
+          if [[ "${{ inputs.policy_path }}" != ".prove/policy.yml" ]]; then
+            cp "${{ inputs.policy_path }}" .prove/policy.yml
+          fi
+        fi
+        prove policy show
+
+    - name: Prove verify (CI)
+      shell: bash
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        set -euo pipefail
+        ARGS=(verify --ci --json)
+        if [[ "${{ inputs.require_done }}" == "true" ]]; then
+          ARGS+=(--require-done)
+        fi
+        # shellcheck disable=SC2086
+        prove "${ARGS[@]}" ${{ inputs.extra_args }}

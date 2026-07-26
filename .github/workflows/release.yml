@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            bin: prove
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bin: prove.exe
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bin: prove
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build release
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="prove-${{ github.ref_name }}-${{ matrix.target }}"
+          mkdir -p "dist/$STAGE"
+          BIN="target/${{ matrix.target }}/release/${{ matrix.bin }}"
+          cp "$BIN" "dist/$STAGE/"
+          cp README.md LICENSE "dist/$STAGE/" 2>/dev/null || true
+          cd dist
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            7z a "$STAGE.zip" "$STAGE"
+          else
+            tar -czf "$STAGE.tar.gz" "$STAGE"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prove-${{ matrix.target }}
+          path: dist/*
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create / update GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true

@@ -366,25 +366,44 @@ impl<'a> Orchestrator<'a> {
         Ok(())
     }
 
-    pub fn verify_only(&self) -> Result<()> {
-        let mission = self.store.load_mission().unwrap_or_else(|_| {
-            Mission::new("(ad-hoc verify)", "prove-verify")
-        });
+    /// Run policy test gates against the current tree.
+    /// Returns Ok(true) if admitted, Ok(false) if rejected (without Err).
+    pub fn verify_only(&self) -> Result<bool> {
+        self.verify_with_options(false, false)
+    }
+
+    /// CI-oriented verify.
+    /// - `require_done`: also require active mission phase is Done/PrReady and fresh review receipt
+    /// - `json`: emit machine-readable summary line as JSON on stdout (human lines still on stderr-ish via println)
+    pub fn verify_with_options(&self, require_done: bool, json: bool) -> Result<bool> {
+        let mission = self.store.load_mission().ok();
+        let mission_id = mission
+            .as_ref()
+            .map(|m| m.id.clone())
+            .unwrap_or_else(|| format!("adhoc_{}", uuid::Uuid::new_v4().simple()));
+
         let receipts = ReceiptStore::open(&self.store.prove_dir)?;
         let (receipt, admit) = receipts::verify_now(
             &self.store.root,
-            &mission.id,
+            &mission_id,
             &self.policy,
             "prove-verify",
         )?;
         receipts.save(&receipt)?;
-        match admit {
-            Ok(()) => println!(
-                "{} verify admitted — receipt {}",
-                "✓".green().bold(),
-                receipt.receipt_id
-            ),
+
+        let mut admitted = admit.is_ok();
+        let mut reasons: Vec<String> = Vec::new();
+
+        match &admit {
+            Ok(()) => {
+                println!(
+                    "{} verify admitted — receipt {}",
+                    "✓".green().bold(),
+                    receipt.receipt_id
+                );
+            }
             Err(e) => {
+                reasons.push(e.message.clone());
                 println!(
                     "{} verify REJECTED: {}",
                     "✗".red().bold(),
@@ -396,7 +415,66 @@ impl<'a> Orchestrator<'a> {
                 );
             }
         }
-        Ok(())
+
+        if require_done {
+            match &mission {
+                None => {
+                    admitted = false;
+                    reasons.push("require-done: no active mission".into());
+                    println!(
+                        "{} require-done failed: no active mission",
+                        "✗".red().bold()
+                    );
+                }
+                Some(m) => {
+                    if !matches!(m.phase, Phase::Done | Phase::PrReady) {
+                        admitted = false;
+                        reasons.push(format!("require-done: phase is {}", m.phase.as_str()));
+                        println!(
+                            "{} require-done failed: phase is {}",
+                            "✗".red().bold(),
+                            phase_color(m.phase)
+                        );
+                    } else {
+                        match receipts.latest(&m.id, ClaimType::ReviewOk)? {
+                            Some(_) => {
+                                println!(
+                                    "{} require-done: mission {} is {}",
+                                    "✓".green().bold(),
+                                    m.id,
+                                    m.phase.as_str()
+                                );
+                            }
+                            None => {
+                                admitted = false;
+                                reasons.push("require-done: missing review receipt".into());
+                                println!(
+                                    "{} require-done failed: missing review receipt",
+                                    "✗".red().bold()
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if json {
+            let payload = serde_json::json!({
+                "admitted": admitted,
+                "receipt_id": receipt.receipt_id,
+                "mission_id": mission_id,
+                "head_hash": receipt.head_hash,
+                "tree_hash": receipt.tree_hash,
+                "policy_hash": receipt.policy_hash,
+                "command_set_hash": receipt.command_set_hash,
+                "require_done": require_done,
+                "reasons": reasons,
+            });
+            println!("PROVE_JSON:{}", payload);
+        }
+
+        Ok(admitted)
     }
 
     pub fn print_status(&self, mission: &Mission) -> Result<()> {
@@ -638,3 +716,4 @@ fn phase_color(p: Phase) -> colored::ColoredString {
         _ => p.as_str().cyan().bold(),
     }
 }
+
