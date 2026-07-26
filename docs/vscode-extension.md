@@ -27,3 +27,6 @@ npx @vscode/vsce package --no-dependencies
 
 ## Requires
 Prove CLI on PATH or `prove.cliPath` set to your release binary.
+
+## Receipt webview
+Click a receipt in the sidebar to open a formatted evidence view (commands, exit codes, seal, hashes).

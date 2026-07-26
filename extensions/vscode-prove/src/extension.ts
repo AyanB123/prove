@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { spawn } from "child_process";
 import { ProveTreeProvider, ProveNode } from "./proveTree";
+import { openReceiptWebview } from "./receiptWebview";
 
 let statusBar: vscode.StatusBarItem;
 let tree: ProveTreeProvider;
@@ -48,10 +49,19 @@ export function activate(context: vscode.ExtensionContext) {
       void openRel(".prove/mission.json");
     }),
     vscode.commands.registerCommand("prove.openNode", async (node: ProveNode) => {
-      if (node?.fsPath) {
-        const doc = await vscode.workspace.openTextDocument(node.fsPath);
-        await vscode.window.showTextDocument(doc, { preview: true });
+      if (!node?.fsPath) return;
+      const isReceipt =
+        node.fsPath.replace(/\\/g, "/").includes("/.prove/receipts/") &&
+        node.fsPath.endsWith(".json");
+      if (isReceipt) {
+        openReceiptWebview(node.fsPath);
+        return;
       }
+      const doc = await vscode.workspace.openTextDocument(node.fsPath);
+      await vscode.window.showTextDocument(doc, { preview: true });
+    }),
+    vscode.commands.registerCommand("prove.openReceipt", (fsPath: string) => {
+      if (fsPath) openReceiptWebview(fsPath);
     })
   );
 
@@ -175,3 +185,4 @@ async function openRel(rel: string) {
   const doc = await vscode.workspace.openTextDocument(full);
   await vscode.window.showTextDocument(doc);
 }
+

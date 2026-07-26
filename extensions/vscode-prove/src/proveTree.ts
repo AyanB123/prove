@@ -165,6 +165,7 @@ export class ProveTreeProvider implements vscode.TreeDataProvider<ProveNode> {
           label: f.replace(/\.json$/, ""),
           description: desc,
           fsPath: fp,
+          contextValue: "proveReceipt",
         });
       }
     }
@@ -211,3 +212,4 @@ function truncate(s: string, n: number): string {
   const t = s.replace(/\s+/g, " ").trim();
   return t.length <= n ? t : t.slice(0, n - 1) + "…";
 }
+

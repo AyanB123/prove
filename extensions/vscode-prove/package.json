@@ -2,7 +2,7 @@
   "name": "prove",
   "displayName": "Prove",
   "description": "Evidence-gated coding agent control plane — status, receipts, and verify in the sidebar.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "ayanb123",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other", "Testing"],
@@ -26,7 +26,8 @@
       { "command": "prove.openPolicy", "title": "Prove: Open Policy" },
       { "command": "prove.openMission", "title": "Prove: Open Mission" },
       { "command": "prove.refresh", "title": "Prove: Refresh", "icon": "$(refresh)" },
-      { "command": "prove.init", "title": "Prove: Init" }
+      { "command": "prove.init", "title": "Prove: Init" },
+      { "command": "prove.openReceipt", "title": "Prove: Open Receipt Webview" }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -92,4 +93,5 @@
   },
   "license": "Apache-2.0"
 }
+
 
