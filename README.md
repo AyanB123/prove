@@ -68,6 +68,17 @@ cd extensions/vscode-prove && npm install && npm run compile
 # F5 in VS Code/Cursor to launch Extension Development Host
 ```
 
+## Team bus
+
+```bash
+prove bus export
+prove bus push --dir /path/to/shared
+prove bus pull --dir /path/to/shared --force
+prove cost
+```
+
+See [docs/bus.md](docs/bus.md).
+
 ## CI (v0.2)
 
 ```yaml
@@ -269,6 +280,7 @@ Interview packet: [docs/job-packet.md](docs/job-packet.md)
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
 
 
 

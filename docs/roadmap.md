@@ -1,15 +1,14 @@
 # Roadmap
 
 ## DONE
-- [x] v0.1 core + traps + demo
-- [x] v0.2 CI Action + extension + HMAC seals
-- [x] v0.3 sandbox + required seals + webview
-- [x] Ed25519 seals + multi-party quorum
-- [x] Marketplace-ready VSIX packaging (`prove-0.3.2.vsix` + publish guide)
+- [x] v0.1–v0.3 core trust stack
+- [x] Ed25519 + multi-party quorum
+- [x] Marketplace-ready VSIX
+- [x] Team mission bus (file-based push/pull/export/import)
+- [x] Cost ledger (`prove cost`)
 
 ## OPEN
-- [ ] Marketplace account publish (needs human PAT: `docs/marketplace-publish.md`)
+- [ ] HTTP mission bus server (optional hosted)
+- [ ] VS Code Marketplace publish (human PAT)
 - [ ] Full OS container sandbox
-- [ ] Team mission bus / policy server
-- [ ] Cost accounting
 - [ ] Human: Show HN / job applications

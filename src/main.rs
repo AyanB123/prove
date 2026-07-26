@@ -73,6 +73,54 @@ enum Commands {
         #[command(subcommand)]
         cmd: KeysCmd,
     },
+    /// Team mission bus (export/import/push/pull shared bundles)
+    Bus {
+        #[command(subcommand)]
+        cmd: BusCmd,
+    },
+    /// Effort/cost ledger from receipts (duration + backend counts)
+    Cost,
+}
+
+#[derive(Subcommand, Debug)]
+enum BusCmd {
+    /// Export active mission + receipts to a bundle file
+    Export {
+        #[arg(short, long)]
+        output: Option<String>,
+        /// Include policy.yml text in the bundle
+        #[arg(long)]
+        include_policy: bool,
+    },
+    /// Import a mission bundle into this repo
+    Import {
+        path: String,
+        /// Replace active mission even if IDs differ
+        #[arg(long)]
+        force: bool,
+    },
+    /// Push active mission bundle to a shared bus directory
+    Push {
+        /// Shared directory (network share, Dropbox, etc.)
+        #[arg(long)]
+        dir: String,
+        #[arg(long)]
+        include_policy: bool,
+    },
+    /// Pull latest (or specific) mission bundle from shared bus directory
+    Pull {
+        #[arg(long)]
+        dir: String,
+        #[arg(long)]
+        mission: Option<String>,
+        #[arg(long)]
+        force: bool,
+    },
+    /// List bundles in a shared bus directory
+    List {
+        #[arg(long)]
+        dir: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -373,6 +421,106 @@ fn real_main() -> anyhow::Result<()> {
                 println!("{} cosigned {} with {}", "✓".green().bold(), p.display(), key.key_id());
             }
         },
+        Commands::Bus { cmd } => match cmd {
+            BusCmd::Export {
+                output,
+                include_policy,
+            } => {
+                let store = ProveStore::discover(&cwd)?;
+                let bundle = prove::bus::MissionBundle::export(&store, include_policy)?;
+                let path = match output {
+                    Some(o) => std::path::PathBuf::from(o),
+                    None => prove::bus::default_bundle_path(&store, &bundle.mission.id),
+                };
+                bundle.write_file(&path)?;
+                println!(
+                    "{} exported {} receipts={} -> {}",
+                    "✓".green().bold(),
+                    bundle.mission.id,
+                    bundle.receipts.len(),
+                    path.display()
+                );
+            }
+            BusCmd::Import { path, force } => {
+                let store = ProveStore::discover(&cwd)?;
+                let pth = std::path::PathBuf::from(&path);
+                let pth = if pth.is_absolute() { pth } else { cwd.join(pth) };
+                let bundle = prove::bus::MissionBundle::read_file(&pth)?;
+                let rep = bundle.import_into(&store, force)?;
+                println!(
+                    "{} imported mission={} phase={} receipts=+{} skip={}",
+                    "✓".green().bold(),
+                    rep.mission_id,
+                    rep.phase,
+                    rep.receipts_imported,
+                    rep.receipts_skipped
+                );
+            }
+            BusCmd::Push { dir, include_policy } => {
+                let store = ProveStore::discover(&cwd)?;
+                let path = prove::bus::push_to_dir(&store, std::path::Path::new(&dir), include_policy)?;
+                println!("{} pushed {}", "✓".green().bold(), path.display());
+            }
+            BusCmd::Pull { dir, mission, force } => {
+                let store = ProveStore::discover(&cwd)?;
+                let rep = prove::bus::pull_from_dir(
+                    &store,
+                    std::path::Path::new(&dir),
+                    mission.as_deref(),
+                    force,
+                )?;
+                println!(
+                    "{} pulled mission={} phase={} receipts=+{}",
+                    "✓".green().bold(),
+                    rep.mission_id,
+                    rep.phase,
+                    rep.receipts_imported
+                );
+            }
+            BusCmd::List { dir } => {
+                let list = prove::bus::list_bus_dir(std::path::Path::new(&dir))?;
+                if list.is_empty() {
+                    println!("{} no bundles in {dir}", "·".yellow());
+                } else {
+                    for e in list {
+                        println!(
+                            "{}  {}  [{}]  receipts={}  {}",
+                            e.mission_id, e.phase, e.exporter, e.receipts, e.goal
+                        );
+                    }
+                }
+            }
+        },
+        Commands::Cost => {
+            let store = ProveStore::discover(&cwd)?;
+            let rep = prove::bus::cost_report(&store)?;
+            println!("{}", "══ prove cost ══".bold());
+            if let Some(id) = &rep.mission_id {
+                println!("mission : {id}");
+            }
+            if let Some(ph) = &rep.phase {
+                println!("phase   : {ph}");
+            }
+            println!("receipts: {}", rep.receipt_count);
+            println!("commands: {}", rep.command_count);
+            println!("failed  : {}", rep.failed_commands);
+            println!(
+                "duration: {} ms ({:.1} s)",
+                rep.total_duration_ms,
+                rep.total_duration_ms as f64 / 1000.0
+            );
+            if !rep.backends.is_empty() {
+                println!("{}", "backends:".bold());
+                for (b, n) in rep.backends {
+                    println!("  {b}: {n} receipt(s)");
+                }
+            }
+            println!(
+                "{}",
+                "Note: wall-clock gate effort only — not LLM token billing.".dimmed()
+            );
+        },
+
     }
     Ok(())
 }
