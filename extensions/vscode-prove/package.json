@@ -1,12 +1,27 @@
 {
   "name": "prove",
   "displayName": "Prove",
-  "description": "Evidence-gated coding agent control plane — status, receipts, and verify in the sidebar.",
-  "version": "0.3.0",
+  "description": "Evidence-gated control plane for coding agents. Mission status, sealed receipts, and prove verify — don't trust the agent, trust the evidence.",
+  "version": "0.3.2",
   "publisher": "ayanb123",
   "engines": { "vscode": "^1.85.0" },
-  "categories": ["Other", "Testing"],
-  "keywords": ["prove", "agents", "verification", "cli", "evidence"],
+  "categories": ["Testing", "Other", "Linters"],
+  "keywords": [
+    "prove",
+    "agents",
+    "ai",
+    "verification",
+    "cli",
+    "evidence",
+    "coding-agents",
+    "security",
+    "receipts"
+  ],
+  "galleryBanner": {
+    "color": "#1b1f33",
+    "theme": "dark"
+  },
+  "icon": "media/icon.png",
   "activationEvents": [
     "workspaceContains:.prove/**",
     "onView:prove.mission",
@@ -14,20 +29,22 @@
     "onCommand:prove.verify",
     "onCommand:prove.doctor",
     "onCommand:prove.openPolicy",
-    "onCommand:prove.refresh"
+    "onCommand:prove.refresh",
+    "onCommand:prove.init",
+    "onCommand:prove.openReceipt"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      { "command": "prove.status", "title": "Prove: Status", "icon": "$(shield)" },
-      { "command": "prove.verify", "title": "Prove: Verify", "icon": "$(check)" },
-      { "command": "prove.verifyCi", "title": "Prove: Verify (CI mode)" },
-      { "command": "prove.doctor", "title": "Prove: Doctor" },
-      { "command": "prove.openPolicy", "title": "Prove: Open Policy" },
-      { "command": "prove.openMission", "title": "Prove: Open Mission" },
-      { "command": "prove.refresh", "title": "Prove: Refresh", "icon": "$(refresh)" },
-      { "command": "prove.init", "title": "Prove: Init" },
-      { "command": "prove.openReceipt", "title": "Prove: Open Receipt Webview" }
+      { "command": "prove.status", "title": "Prove: Status", "category": "Prove", "icon": "$(shield)" },
+      { "command": "prove.verify", "title": "Prove: Verify", "category": "Prove", "icon": "$(check)" },
+      { "command": "prove.verifyCi", "title": "Prove: Verify (CI mode)", "category": "Prove" },
+      { "command": "prove.doctor", "title": "Prove: Doctor", "category": "Prove" },
+      { "command": "prove.openPolicy", "title": "Prove: Open Policy", "category": "Prove" },
+      { "command": "prove.openMission", "title": "Prove: Open Mission", "category": "Prove" },
+      { "command": "prove.refresh", "title": "Prove: Refresh", "category": "Prove", "icon": "$(refresh)" },
+      { "command": "prove.init", "title": "Prove: Init", "category": "Prove" },
+      { "command": "prove.openReceipt", "title": "Prove: Open Receipt Webview", "category": "Prove" }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -42,7 +59,8 @@
       "prove": [
         {
           "id": "prove.mission",
-          "name": "Mission & Evidence"
+          "name": "Mission & Evidence",
+          "contextualTitle": "Prove"
         }
       ]
     },
@@ -51,13 +69,16 @@
         {
           "command": "prove.refresh",
           "when": "view == prove.mission",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "prove.verify",
           "when": "view == prove.mission",
-          "group": "navigation"
+          "group": "navigation@2"
         }
+      ],
+      "commandPalette": [
+        { "command": "prove.openReceipt", "when": "false" }
       ]
     },
     "configuration": {
@@ -71,7 +92,8 @@
         "prove.autoRefreshMs": {
           "type": "number",
           "default": 3000,
-          "description": "How often to refresh .prove state (ms). 0 disables."
+          "minimum": 0,
+          "description": "How often to refresh .prove state (ms). 0 disables polling (file watcher still active)."
         }
       }
     }
@@ -80,7 +102,7 @@
     "compile": "node ./node_modules/typescript/lib/tsc.js -p .",
     "watch": "node ./node_modules/typescript/lib/tsc.js -watch -p .",
     "vscode:prepublish": "npm run compile",
-    "package": "npx @vscode/vsce package --no-dependencies"
+    "package": "node ./node_modules/typescript/lib/tsc.js -p . && node ../../scripts/package-vsix.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
@@ -91,7 +113,9 @@
     "type": "git",
     "url": "https://github.com/AyanB123/prove.git"
   },
+  "bugs": {
+    "url": "https://github.com/AyanB123/prove/issues"
+  },
+  "homepage": "https://github.com/AyanB123/prove#readme",
   "license": "Apache-2.0"
 }
-
-

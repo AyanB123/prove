@@ -1,24 +1,25 @@
 # Prove — live plan
 
-## Completed
-| Item | Status |
-|------|--------|
-| Proof-or-stop + multi-CLI | Done |
-| Trap eval (false-done) | **12/12 → 0** |
-| GitHub + releases | Done |
-| CI Action + sandbox | Done |
-| Extension + receipt webview | Done |
-| Ed25519 + multi-party quorum | Done |
-
-## Metrics
-```
-false-done: naive 12/12 → prove 0/12
-unit tests: 17 passed
-```
+## Completed product stack
+| Layer | Status |
+|-------|--------|
+| Proof-or-stop lifecycle | Done |
+| Multi-CLI conductor | Done |
+| Trap eval **12/12 → 0 false-done** | Done |
+| GitHub releases + CI Action | Done |
+| Sandbox + seals + quorum | Done |
+| VS Code extension + receipt webview | Done |
+| Marketplace-ready VSIX 0.3.2 | Done |
 
 ## Remaining
-1. Marketplace publish (human + packaging)
-2. Team mission bus (bigger product)
-3. Show HN / job apps (parked)
+| Item | Owner |
+|------|--------|
+| `vsce publish` to Marketplace | Human (PAT) — see docs/marketplace-publish.md |
+| Team mission bus | Next big product (optional) |
+| Show HN / job apps | Human (parked) |
 
-Repo: https://github.com/AyanB123/prove
+## Install extension now
+https://github.com/AyanB123/prove/releases → `prove-0.3.2.vsix` → Install from VSIX
+
+## Repo
+https://github.com/AyanB123/prove
