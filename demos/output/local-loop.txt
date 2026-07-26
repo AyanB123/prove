@@ -1,0 +1,65 @@
+✓ initialized C:\Users\Ayan Babwany\AppData\Local\Temp\prove_vid_local-loop_f787a2\.prove
+Don't trust the agent. Trust the evidence.
+next:
+  prove doctor
+  prove run "<goal>" --backend local-loop
+prove run
+goal   : fix discount validation
+backend: local-loop
+→ plan admitted
+● patching with backend local-loop
+→ patch receipt admitted
+  local-loop applied correct discount validation for goal: fix discount validation
+● running proof gate: test
+✓ test receipt admitted (rec_635167176b087703)
+● running proof gate: review checklist
+✓ review admitted — mission DONE
+
+══ prove status ══
+mission : mis_31b5b61dd665453b8cec5eafeeff3279
+goal    : fix discount validation
+phase   : done
+backend : local-loop
+budget  : steps 4/20  repairs 0/2
+touched : src/checkout.py
+evidence:
+  plan   ✓ admitted
+  patch  ✓ rec_830f299b375a93fd
+  test   ✓ rec_635167176b087703 fresh
+  review ✓ rec_0f5c7ec73d5313df
+  done   ✓ done
+receipts: 3
+  - PatchApplied rec_830f299b375a93fd (tree 15390fe9)
+  - TestsPassed rec_635167176b087703 (tree 15390fe9)
+  - ReviewOk rec_0f5c7ec73d5313df (tree 15390fe9)
+next:
+  prove pr       # export admissible evidence bundle
+  prove verify   # re-check gates against HEAD
+Agents can claim. Only evidence can advance.
+Mission complete with admissible evidence.
+Next: prove pr   # export evidence bundle
+
+══ prove status ══
+mission : mis_31b5b61dd665453b8cec5eafeeff3279
+goal    : fix discount validation
+phase   : done
+backend : local-loop
+budget  : steps 4/20  repairs 0/2
+touched : src/checkout.py
+evidence:
+  plan   ✓ admitted
+  patch  ✓ rec_830f299b375a93fd
+  test   ✓ rec_635167176b087703 fresh
+  review ✓ rec_0f5c7ec73d5313df
+  done   ✓ done
+receipts: 3
+  - PatchApplied rec_830f299b375a93fd (tree 15390fe9)
+  - TestsPassed rec_635167176b087703 (tree 15390fe9)
+  - ReviewOk rec_0f5c7ec73d5313df (tree 15390fe9)
+next:
+  prove pr       # export admissible evidence bundle
+  prove verify   # re-check gates against HEAD
+Agents can claim. Only evidence can advance.
+✓ wrote C:\Users\Ayan Babwany\AppData\Local\Temp\prove_vid_local-loop_f787a2\.prove\artifacts\mis_31b5b61dd665453b8cec5eafeeff3279_pr_bundle.json
+✓ wrote C:\Users\Ayan Babwany\AppData\Local\Temp\prove_vid_local-loop_f787a2\.prove\artifacts\mis_31b5b61dd665453b8cec5eafeeff3279_PR_EVIDENCE.md
+→ phase → pr_ready

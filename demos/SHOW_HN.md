@@ -71,7 +71,7 @@ Rust CLI. Adapters: `local-loop`, `naive`, `claude-code`, `aider`, `codex`. Apac
 
 Try the trap eval and tell me which false-done mode I am still missing. If you run multi-agent coding day to day, I want the cases that burned you.
 
-Repo: https://github.com/\<you\>/prove  
+Repo: https://github.com/AyanB123/prove  
 Tagline: Don't trust the agent. Trust the evidence.
 
 ---
@@ -99,5 +99,6 @@ Receipt admission re-checks head/tree, policy hash, and command-set hash. Tamper
 
 **"Why Rust?"**  
 Local CLI, predictable packaging, pure lifecycle/receipt logic easy to test without a model in the loop.
+
 
 

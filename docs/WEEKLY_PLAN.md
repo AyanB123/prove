@@ -30,8 +30,8 @@
 - [x] Launch README punch-up
 - [x] 45s demo storyboard (`demos/STORYBOARD-45s.md`)
 - [x] Show HN title + first comment draft (`demos/SHOW_HN.md`)
-- [ ] Record demo video from storyboard (HUMAN)
-- [ ] Replace GitHub URL placeholders (HUMAN)
+- [x] Record demo video (`demos/output/prove-demo-45s.mp4`)
+- [x] Replace GitHub URL placeholders → https://github.com/AyanB123/prove
 
 ## Week 4 — DONE (code + docs)
 - [x] Hardening (Windows paths, clearer errors, status truncation, policy schema errors)
@@ -39,7 +39,7 @@
 - [x] Launch checklist (`docs/LAUNCH_CHECKLIST.md`)
 - [x] Application targets (`docs/APPLICATION_TARGETS.md`)
 - [x] Final verify: cargo test 12/12, eval naive 10/10 → prove 0/10
-- [ ] Public launch posts (HUMAN — follow LAUNCH_CHECKLIST)
+- [ ] Public launch posts (HUMAN — Show HN / LinkedIn / Twitter; drafts ready)
 - [ ] Send applications (HUMAN — use job-packet + APPLICATION_TARGETS)
 
 ## Command sequence (daily driver)
@@ -78,4 +78,5 @@ unit tests: 12 passed
 3. Record 45s video from `demos/STORYBOARD-45s.md`
 4. Post Show HN / LinkedIn / Twitter
 5. Apply using `docs/job-packet.md` + `docs/APPLICATION_TARGETS.md`
+
 

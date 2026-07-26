@@ -1,0 +1,94 @@
+✓ initialized C:\Users\Ayan Babwany\AppData\Local\Temp\prove_vid_naive_29b52b\.prove
+Don't trust the agent. Trust the evidence.
+next:
+  prove doctor
+  prove run "<goal>" --backend local-loop
+prove run
+goal   : fix discount validation
+backend: naive
+→ plan admitted
+● patching with backend naive
+! backend self-reported tests passed — ignored (not evidence)
+→ patch receipt admitted
+  Patched apply_discount happy path. All tests passed.
+● running proof gate: test
+✗ test receipt REJECTED: command ["python", "-m", "pytest", "-q", "tests/test_hidden_contract.py"] exited 1 — tests\test_hidden_contract.py:17: Failed
+=========================== short test summary info =…
+PROOF-OR-STOP refusing done — evidence missing or failed
+● patching with backend naive
+! backend self-reported tests passed — ignored (not evidence)
+→ patch receipt admitted
+  Patched apply_discount happy path. All tests passed.
+● running proof gate: test
+✗ test receipt REJECTED: command ["python", "-m", "pytest", "-q", "tests/test_hidden_contract.py"] exited 1 — tests\test_hidden_contract.py:17: Failed
+=========================== short test summary info =…
+PROOF-OR-STOP refusing done — evidence missing or failed
+● patching with backend naive
+! backend self-reported tests passed — ignored (not evidence)
+→ patch receipt admitted
+  Patched apply_discount happy path. All tests passed.
+● running proof gate: test
+✗ test receipt REJECTED: command ["python", "-m", "pytest", "-q", "tests/test_hidden_contract.py"] exited 1 — tests\test_hidden_contract.py:17: Failed
+=========================== short test summary info =…
+PROOF-OR-STOP refusing done — evidence missing or failed
+STOP repair_limit 2 exceeded
+
+══ prove status ══
+mission : mis_ecc9aa01fe4f485cb0b385e07a52d41c
+goal    : fix discount validation
+phase   : failed
+backend : naive
+budget  : steps 7/20  repairs 3/2
+touched : src/checkout.py
+error   : command ["python", "-m", "pytest", "-q", "tests/test_hidden_contract.py"] exited 1 — tests\test_hidden_contract.py:17: Failed
+=========================== short test summary info =…
+stop    : repair_limit 2 exceeded
+evidence:
+  plan   ✓ admitted
+  patch  ✓ rec_f06f7c602896ef9b
+  test   · rec_c7849d6e08be1144 stale/fail: command ["python", "-m", "pytest", "-q", "tests/test_hidden_contract.py"] exited 1 — tests\test_hidden_contract.py:17: Failed
+=========================== short test summary info =…
+  review · missing
+  done   · failed
+receipts: 6
+  - PatchApplied rec_010f0495490c74d4 (tree 4e0965b2)
+  - TestsPassed rec_ba42bbf1344e1feb (tree 4e0965b2)
+  - PatchApplied rec_55bedc2a1b2002e6 (tree 4e0965b2)
+  - TestsPassed rec_e1791fd677243f60 (tree 4e0965b2)
+  - PatchApplied rec_f06f7c602896ef9b (tree 4e0965b2)
+  - TestsPassed rec_c7849d6e08be1144 (tree 4e0965b2)
+next:
+  prove run "<goal>" --backend local-loop
+  prove doctor   # check env / policy / backends
+Agents can claim. Only evidence can advance.
+Mission stopped without fake-done.
+Next: prove doctor   # inspect env / policy
+
+══ prove status ══
+mission : mis_ecc9aa01fe4f485cb0b385e07a52d41c
+goal    : fix discount validation
+phase   : failed
+backend : naive
+budget  : steps 7/20  repairs 3/2
+touched : src/checkout.py
+error   : command ["python", "-m", "pytest", "-q", "tests/test_hidden_contract.py"] exited 1 — tests\test_hidden_contract.py:17: Failed
+=========================== short test summary info =…
+stop    : repair_limit 2 exceeded
+evidence:
+  plan   ✓ admitted
+  patch  ✓ rec_f06f7c602896ef9b
+  test   · rec_c7849d6e08be1144 stale/fail: command ["python", "-m", "pytest", "-q", "tests/test_hidden_contract.py"] exited 1 — tests\test_hidden_contract.py:17: Failed
+=========================== short test summary info =…
+  review · missing
+  done   · failed
+receipts: 6
+  - PatchApplied rec_010f0495490c74d4 (tree 4e0965b2)
+  - TestsPassed rec_ba42bbf1344e1feb (tree 4e0965b2)
+  - PatchApplied rec_55bedc2a1b2002e6 (tree 4e0965b2)
+  - TestsPassed rec_e1791fd677243f60 (tree 4e0965b2)
+  - PatchApplied rec_f06f7c602896ef9b (tree 4e0965b2)
+  - TestsPassed rec_c7849d6e08be1144 (tree 4e0965b2)
+next:
+  prove run "<goal>" --backend local-loop
+  prove doctor   # check env / policy / backends
+Agents can claim. Only evidence can advance.

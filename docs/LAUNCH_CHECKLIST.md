@@ -72,7 +72,7 @@ You own the push. Do not claim launch complete until the clone URL works for str
 
 ## 2. Replace URL placeholders
 
-Search the tree for `AyanB123` and any `github.com/AyanB123/prove` stubs. Update at least:
+Search the tree for remaining stubs (should already be AyanB123/prove). Update at least:
 
 | File | What to fix |
 |------|-------------|
@@ -88,7 +88,7 @@ Optional: pin a release tag `v0.1.0` after push for a stable demo SHA.
 Verify:
 
 ```powershell
-rg -n "AyanB123|github.com/AyanB123" -g '!target/**'
+rg -n "github.com/<|YOUR_USER" -g '!target/**'
 ```
 
 Expect zero hits (or only historical notes you intentionally keep).
@@ -237,4 +237,5 @@ These stay unchecked until humans perform them:
 - [ ] Job applications sent
 
 Docs and packaging can be complete while the boxes above remain open.
+
 

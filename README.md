@@ -26,6 +26,14 @@ Generation quality is commoditized. Claim admissibility is not.
 
 ---
 
+## Demo video
+
+[45s demo (MP4)](demos/output/prove-demo-45s.mp4) · [GIF preview](demos/output/prove-demo-preview.gif)
+
+```text
+false-done rate: naive 10/10 → prove 0/10
+```
+
 ## 30-second demo
 
 Trap fixture: visible unit tests pass. Hidden contract fails.
@@ -236,5 +244,6 @@ Interview packet: [docs/job-packet.md](docs/job-packet.md)
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
 
 
