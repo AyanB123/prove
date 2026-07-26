@@ -5,7 +5,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::time::Instant;
 use uuid::Uuid;
 
@@ -365,14 +364,11 @@ pub fn run_command_set(
             continue;
         }
         let started = Instant::now();
-        let output = Command::new(&cmd[0])
-            .args(&cmd[1..])
-            .current_dir(root)
-            .output()
+        let output = crate::sandbox::run_sandboxed(root, cmd, &policy.sandbox_opts())
             .with_context(|| {
                 format!(
-                    "failed to spawn test command `{}`\n  \
-                     Check that the binary is on PATH, or edit gates.test.commands in policy.yml",
+                    "failed to spawn sandboxed test command `{}`\n  \
+                     Check PATH / policy gates.test.commands / safety.sandbox settings",
                     cmd.join(" ")
                 )
             })?;

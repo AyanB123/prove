@@ -386,6 +386,15 @@ fn run_doctor(cwd: &std::path::Path) -> anyhow::Result<()> {
         }
     }
 
+    if has_policy && policy_ok {
+        if let Ok(p) = store.load_policy() {
+            println!(
+                "sandbox {}",
+                prove::sandbox::describe(&p.sandbox_opts()).dimmed()
+            );
+        }
+    }
+
     println!("{}", "Don't trust the agent. Trust the evidence.".cyan());
     Ok(())
 }

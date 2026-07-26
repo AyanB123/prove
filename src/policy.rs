@@ -1,7 +1,9 @@
 use anyhow::{anyhow, bail, Context, Result};
+use crate::sandbox::{SandboxMode, SandboxOpts};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Policy {
@@ -38,7 +40,15 @@ pub struct Budgets {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Safety {
     pub deny_command_regex: Vec<String>,
+    #[serde(default)]
+    pub sandbox: SandboxMode,
+    #[serde(default)]
+    pub allow_network: bool,
+    #[serde(default = "default_timeout_secs")]
+    pub command_timeout_secs: u64,
 }
+
+fn default_timeout_secs() -> u64 { 900 }
 
 impl Default for Policy {
     fn default() -> Self {
@@ -71,6 +81,9 @@ impl Default for Policy {
                     r"rm\s+-rf\s+/".into(),
                     r"git\s+push\s+--force".into(),
                 ],
+                sandbox: SandboxMode::Standard,
+                allow_network: false,
+                command_timeout_secs: 900,
             },
         }
     }
@@ -160,6 +173,14 @@ impl Policy {
                 .map(|re| re.is_match(&joined))
                 .unwrap_or(false)
         })
+    }
+
+    pub fn sandbox_opts(&self) -> SandboxOpts {
+        SandboxOpts {
+            mode: self.safety.sandbox,
+            allow_network: self.safety.allow_network,
+            timeout: Duration::from_secs(self.safety.command_timeout_secs.max(1)),
+        }
     }
 }
 

@@ -18,10 +18,11 @@
 - [ ] Streaming backend logs in panel
 
 ## v0.4 — stronger trust
-- [ ] OS sandbox for gate commands
+- [x] OS sandbox for gate commands (standard scrub + strict bwrap)
 - [ ] Ed25519 / required-seal policy
 - [ ] Key rotation
 
 ## v0.5 — team
 - [ ] Shared mission bus / policy server
 - [ ] Cost accounting across backends
+

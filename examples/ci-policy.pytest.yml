@@ -1,4 +1,3 @@
-# Example CI policy for Python repos
 gates:
   test:
     commands:
@@ -13,3 +12,6 @@ budgets:
 safety:
   deny_command_regex:
     - "rm\\s+-rf\\s+/"
+  sandbox: standard
+  allow_network: false
+  command_timeout_secs: 600
