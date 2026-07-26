@@ -36,6 +36,7 @@ pub fn run_trap_suite(repo_root: &Path) -> Result<Vec<TrapResult>> {
     results.push(run_lifecycle_cannot_skip_to_done()?);
     results.push(run_missing_test_blocks_review()?);
     results.push(run_repair_limit_stops_without_done(&trap)?);
+    results.push(run_require_sealed_receipts_trap()?);
 
     Ok(results)
 }
@@ -469,6 +470,61 @@ fn run_repair_limit_stops_without_done(trap: &Path) -> Result<TrapResult> {
     })
 }
 
+
+fn run_require_sealed_receipts_trap() -> Result<TrapResult> {
+    let tmp = tempfile_dir("reqseal")?;
+    std::fs::write(tmp.join("ok.py"), "print('ok')\n")?;
+    let store = ProveStore {
+        root: tmp.clone(),
+        prove_dir: tmp.join(".prove"),
+    };
+    let mut policy = Policy::default();
+    policy.gates.test.commands = vec![vec!["python".into(), "ok.py".into()]];
+    policy.safety.require_sealed_receipts = true;
+    store.init(&policy)?;
+    // No keys init → mint unsigned receipt path via verify_now/save without key
+    let (receipt, admit_mint) = receipts::mint_test_receipt(
+        &tmp,
+        "reqseal",
+        &policy,
+        Producer {
+            backend: "t".into(),
+            run_id: "1".into(),
+        },
+        &[],
+    )?;
+    // mint itself may succeed (exit codes ok) but admit_freshness should fail without seal when required
+    let re = receipts::admit_test_receipt(&tmp, &policy, &receipt)?;
+    let blocked = re.is_err() || admit_mint.is_err();
+    // Now with keys, should admit
+    let _key = crate::seal::LocalKey::init(&store.prove_dir)?;
+    let (receipt2, _admit2) = receipts::mint_test_receipt(
+        &tmp,
+        "reqseal2",
+        &policy,
+        Producer {
+            backend: "t".into(),
+            run_id: "2".into(),
+        },
+        &[],
+    )?;
+    // save seals on store.save — mint_test_receipt returns receipt before save seal?
+    // ensure sealed via store
+    let rs = ReceiptStore::open(&store.prove_dir)?;
+    rs.save(&receipt2)?;
+    let loaded = rs.latest("reqseal2", ClaimType::TestsPassed)?.expect("saved");
+    let re2 = receipts::admit_test_receipt(&tmp, &policy, &loaded)?;
+    let sealed_ok = re2.is_ok() && loaded.seal.is_some();
+
+    Ok(TrapResult {
+        name: "require-sealed-receipts".into(),
+        naive_false_done: true,
+        prove_false_done: false,
+        prove_blocked: blocked && sealed_ok,
+        notes: format!("unsigned_blocked={blocked} sealed_ok={sealed_ok} mint_admit={admit_mint:?} re={re:?} re2={re2:?}"),
+    })
+}
+
 pub fn print_eval_report(results: &[TrapResult]) {
     println!("{}", "══ prove eval traps ══".bold());
     let mut naive_fd = 0;
@@ -530,3 +586,4 @@ fn copy_dir(src: &Path, dst: &Path) -> Result<()> {
     }
     Ok(())
 }
+

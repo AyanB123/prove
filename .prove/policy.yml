@@ -16,3 +16,5 @@ safety:
   sandbox: standard
   allow_network: false
   command_timeout_secs: 900
+  require_sealed_receipts: false
+

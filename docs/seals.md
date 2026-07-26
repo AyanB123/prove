@@ -20,3 +20,19 @@ prove verify        # new receipts include seal{alg,key_id,signature}
 - Key rotation / remote KMS
 
 This is the foundation for v0.4 signed receipts.
+
+
+## Required seals
+
+```yaml
+safety:
+  require_sealed_receipts: true
+```
+
+When true, admit fails unless the receipt carries a valid seal for the local key.
+Workflow:
+
+```bash
+prove keys init
+prove verify   # writes sealed receipts
+```

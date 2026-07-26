@@ -46,6 +46,9 @@ pub struct Safety {
     pub allow_network: bool,
     #[serde(default = "default_timeout_secs")]
     pub command_timeout_secs: u64,
+    /// Reject receipts that lack a valid local seal.
+    #[serde(default)]
+    pub require_sealed_receipts: bool,
 }
 
 fn default_timeout_secs() -> u64 { 900 }
@@ -84,6 +87,7 @@ impl Default for Policy {
                 sandbox: SandboxMode::Standard,
                 allow_network: false,
                 command_timeout_secs: 900,
+                require_sealed_receipts: false,
             },
         }
     }

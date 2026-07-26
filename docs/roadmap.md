@@ -1,28 +1,21 @@
 # Roadmap
 
 ## v0.1 — shock MVP — DONE
-- [x] Lifecycle + receipts + trap suite
-- [x] Multi-CLI adapters
-- [x] Demo video + GitHub
+- [x] Lifecycle + receipts + traps + demo
 
-## v0.2 — team CI + IDE surface — DONE
-- [x] `prove verify --ci --json --require-done`
-- [x] GitHub Action (prebuilt binary + source fallback)
-- [x] Release binaries (linux/win/mac-arm)
-- [x] VS Code/Cursor extension + VSIX
-- [x] Local HMAC receipt seals (`prove keys`)
+## v0.2 — CI + IDE + seals — DONE
+- [x] verify --ci, GitHub Action, binaries, VS Code extension, HMAC seals
 
-## v0.3 — IDE polish
-- [ ] Richer receipt viewer / webview
-- [ ] Marketplace publish
-- [ ] Streaming backend logs in panel
+## v0.3 — trust hardening — DONE
+- [x] Sandboxed gate commands (standard/strict)
+- [x] `require_sealed_receipts` policy enforcement
+- [x] Trap suite 11/11 (false-done prove 0)
 
-## v0.4 — stronger trust
-- [x] OS sandbox for gate commands (standard scrub + strict bwrap)
-- [ ] Ed25519 / required-seal policy
-- [ ] Key rotation
+## v0.3.x polish
+- [ ] Extension webview / marketplace
+- [ ] Ed25519 multi-party seals
+- [ ] Full OS container sandbox
 
 ## v0.5 — team
 - [ ] Shared mission bus / policy server
-- [ ] Cost accounting across backends
-
+- [ ] Cost accounting

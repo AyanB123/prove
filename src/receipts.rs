@@ -432,6 +432,20 @@ pub fn mint_test_receipt(
         seal: None,
     };
     receipt.receipt_id = receipt.content_id();
+    // Seal immediately when a local key exists so mint-path admission matches store.save.
+    if let Ok(Some(key)) = crate::seal::LocalKey::load(&root.join(".prove")) {
+        let mut for_hash = receipt.clone();
+        for_hash.seal = None;
+        for_hash.receipt_id = String::new();
+        if let Ok(body) = serde_json::to_vec(&for_hash) {
+            let payload = crate::seal::sealing_payload(&body);
+            receipt.seal = Some(crate::seal::ReceiptSeal {
+                alg: "hmac-sha256".into(),
+                key_id: key.key_id.clone(),
+                signature: key.sign_hex(&payload),
+            });
+        }
+    }
     // Freshness is defined as "bound to the tree we just observed".
     // Re-capturing here races with tool caches; re-admit later uses admit_test_receipt.
     let admit = if receipt.commands.iter().any(|c| c.exit_code != 0) {
@@ -445,7 +459,7 @@ pub fn mint_test_receipt(
             message: format_command_failure(failed),
         })
     } else {
-        Ok(())
+        admit_test_receipt(root, policy, &receipt)?
     };
     Ok((receipt, admit))
 }
@@ -529,7 +543,7 @@ pub fn admit_freshness(
 ) -> Result<(), AdmitError> {
     let prove_dir = root.join(".prove");
     if prove_dir.exists() {
-        verify_receipt_seal(&prove_dir, receipt)?;
+        verify_receipt_seal(&prove_dir, receipt, policy.safety.require_sealed_receipts)?;
     }
     let state = git_state::capture_state(root).map_err(|e| AdmitError {
         kind: AdmitErrorKind::HashDrift,
@@ -686,8 +700,16 @@ mod tests {
 
 
 
-pub fn verify_receipt_seal(prove_dir: &Path, receipt: &Receipt) -> Result<(), AdmitError> {
-    let Some(seal) = &receipt.seal else { return Ok(()); };
+pub fn verify_receipt_seal(prove_dir: &Path, receipt: &Receipt, require: bool) -> Result<(), AdmitError> {
+    let Some(seal) = &receipt.seal else {
+        if require {
+            return Err(AdmitError {
+                kind: AdmitErrorKind::SealInvalid,
+                message: "policy requires sealed receipts but this receipt has no seal — run `prove keys init` and re-verify".into(),
+            });
+        }
+        return Ok(());
+    };
     let key = crate::seal::LocalKey::load(prove_dir).map_err(|e| AdmitError {
         kind: AdmitErrorKind::SealInvalid,
         message: format!("failed to load seal key: {e}"),
