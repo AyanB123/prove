@@ -59,6 +59,15 @@ Or the split scenario (Windows PowerShell / bash):
 
 ---
 
+## VS Code / Cursor (v0.3)
+
+Extension: [`extensions/vscode-prove`](extensions/vscode-prove) — mission sidebar, receipts, verify commands.
+
+```bash
+cd extensions/vscode-prove && npm install && npm run compile
+# F5 in VS Code/Cursor to launch Extension Development Host
+```
+
 ## CI (v0.2)
 
 ```yaml
@@ -260,6 +269,7 @@ Interview packet: [docs/job-packet.md](docs/job-packet.md)
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
 
 
 

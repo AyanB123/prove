@@ -4,13 +4,18 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name for packaging label when manually run (e.g. v0.2.0-dev)"
+        required: false
+        default: "dev"
 
 permissions:
   contents: write
 
 jobs:
   build:
-    name: build-${{ matrix.os }}
+    name: build-${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -24,6 +29,9 @@ jobs:
             bin: prove.exe
           - os: macos-latest
             target: aarch64-apple-darwin
+            bin: prove
+          - os: macos-13
+            target: x86_64-apple-darwin
             bin: prove
     steps:
       - uses: actions/checkout@v4
@@ -42,23 +50,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          STAGE="prove-${{ github.ref_name }}-${{ matrix.target }}"
+          REF_NAME="${GITHUB_REF_NAME}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            REF_NAME="${{ inputs.tag }}"
+          fi
+          STAGE="prove-${REF_NAME}-${{ matrix.target }}"
           mkdir -p "dist/$STAGE"
           BIN="target/${{ matrix.target }}/release/${{ matrix.bin }}"
           cp "$BIN" "dist/$STAGE/"
           cp README.md LICENSE "dist/$STAGE/" 2>/dev/null || true
           cd dist
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            7z a "$STAGE.zip" "$STAGE"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            7z a "${STAGE}.zip" "$STAGE"
           else
-            tar -czf "$STAGE.tar.gz" "$STAGE"
+            tar -czf "${STAGE}.tar.gz" "$STAGE"
           fi
+          ls -la
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: prove-${{ matrix.target }}
-          path: dist/*
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
 
   publish:
     needs: build
@@ -69,8 +84,13 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+      - name: Flatten assets
+        run: |
+          mkdir -p upload
+          find artifacts -type f \( -name '*.tar.gz' -o -name '*.zip' \) -exec cp {} upload/ \;
+          ls -la upload
       - name: Create / update GitHub release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/**/*
+          files: upload/*
           generate_release_notes: true

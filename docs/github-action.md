@@ -40,6 +40,8 @@ jobs:
 | `toolchain` | `stable` | Rust used to build Prove |
 | `working_directory` | `.` | Subdir to verify |
 | `extra_args` | `` | Extra CLI args |
+| `version` | latest release | Prebuilt tag e.g. `v0.2.0` |
+| `build_from_source` | `false` | Force cargo build |
 
 ## Local equivalent
 
@@ -63,3 +65,4 @@ Exit codes:
 Prove spawns the policy commands itself. Job logs saying "tests passed" are not enough — the Action fails unless command exit codes are 0 under the bound policy hash.
 
 See `docs/trust-model.md` and `docs/eval-report.md`.
+

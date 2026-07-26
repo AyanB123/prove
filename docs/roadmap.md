@@ -15,10 +15,9 @@
 - [x] Release workflow (linux/mac/win binaries on tags)
 - [x] Example CI policies (`examples/`)
 - [ ] Richer TUI status (optional)
-- [ ] Consume prebuilt release binary in Action (faster than build-from-source)
+- [x] Consume prebuilt release binary in Action (fallback to source)
 
-## v0.3
-- [ ] VS Code / Cursor panel reading `.prove/`
+## v0.3 — IDE surface — IN PROGRESS`n- [x] VS Code / Cursor extension scaffold (`extensions/vscode-prove`)
 - [ ] Streaming backend logs
 
 ## v0.4
@@ -33,3 +32,4 @@
 - Optional computer-use backend
 - Richer code graph
 - Hosted eval leaderboard
+

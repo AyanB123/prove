@@ -1,0 +1,95 @@
+{
+  "name": "prove",
+  "displayName": "Prove",
+  "description": "Evidence-gated coding agent control plane — status, receipts, and verify in the sidebar.",
+  "version": "0.2.0",
+  "publisher": "ayanb123",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other", "Testing"],
+  "keywords": ["prove", "agents", "verification", "cli", "evidence"],
+  "activationEvents": [
+    "workspaceContains:.prove/**",
+    "onView:prove.mission",
+    "onCommand:prove.status",
+    "onCommand:prove.verify",
+    "onCommand:prove.doctor",
+    "onCommand:prove.openPolicy",
+    "onCommand:prove.refresh"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "prove.status", "title": "Prove: Status", "icon": "$(shield)" },
+      { "command": "prove.verify", "title": "Prove: Verify", "icon": "$(check)" },
+      { "command": "prove.verifyCi", "title": "Prove: Verify (CI mode)" },
+      { "command": "prove.doctor", "title": "Prove: Doctor" },
+      { "command": "prove.openPolicy", "title": "Prove: Open Policy" },
+      { "command": "prove.openMission", "title": "Prove: Open Mission" },
+      { "command": "prove.refresh", "title": "Prove: Refresh", "icon": "$(refresh)" },
+      { "command": "prove.init", "title": "Prove: Init" }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "prove",
+          "title": "Prove",
+          "icon": "media/prove.svg"
+        }
+      ]
+    },
+    "views": {
+      "prove": [
+        {
+          "id": "prove.mission",
+          "name": "Mission & Evidence"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "prove.refresh",
+          "when": "view == prove.mission",
+          "group": "navigation"
+        },
+        {
+          "command": "prove.verify",
+          "when": "view == prove.mission",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Prove",
+      "properties": {
+        "prove.cliPath": {
+          "type": "string",
+          "default": "prove",
+          "description": "Path to the prove CLI binary (default: prove on PATH)."
+        },
+        "prove.autoRefreshMs": {
+          "type": "number",
+          "default": 3000,
+          "description": "How often to refresh .prove state (ms). 0 disables."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node ./node_modules/typescript/lib/tsc.js -p .",
+    "watch": "node ./node_modules/typescript/lib/tsc.js -watch -p .",
+    "vscode:prepublish": "npm run compile",
+    "package": "npx @vscode/vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AyanB123/prove.git"
+  },
+  "license": "Apache-2.0"
+}
+

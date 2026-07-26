@@ -14,8 +14,12 @@ inputs:
     description: Also require active mission phase Done/PrReady + review receipt
     required: false
     default: "false"
+  version:
+    description: Prove release tag to download (e.g. v0.2.0). Empty = latest. Falls back to building from source.
+    required: false
+    default: ""
   toolchain:
-    description: Rust toolchain for building Prove from source
+    description: Rust toolchain if building Prove from source (fallback)
     required: false
     default: stable
   working_directory:
@@ -26,34 +30,100 @@ inputs:
     description: Extra args appended to prove verify
     required: false
     default: ""
+  build_from_source:
+    description: Force cargo build instead of release binary
+    required: false
+    default: "false"
 
 runs:
   using: composite
   steps:
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: ${{ inputs.toolchain }}
-
-    - name: Cache cargo
-      uses: Swatinem/rust-cache@v2
-      with:
-        workspaces: ${{ github.action_path }}
-
-    - name: Build prove CLI
+    - name: Install prove CLI
       shell: bash
-      working-directory: ${{ github.action_path }}
+      env:
+        PROVE_VERSION: ${{ inputs.version }}
+        FORCE_SOURCE: ${{ inputs.build_from_source }}
       run: |
         set -euo pipefail
-        cargo build --release
-        echo "${{ github.action_path }}/target/release" >> "$GITHUB_PATH"
-        ./target/release/prove --version
+        INSTALL_DIR="${RUNNER_TEMP}/prove-bin"
+        mkdir -p "$INSTALL_DIR"
+
+        install_from_source() {
+          echo "Building prove from action source..."
+          cd "${{ github.action_path }}"
+          cargo build --release
+          cp target/release/prove "$INSTALL_DIR/prove" 2>/dev/null || cp target/release/prove.exe "$INSTALL_DIR/prove.exe"
+        }
+
+        if [[ "${FORCE_SOURCE}" == "true" ]]; then
+          rustup show >/dev/null 2>&1 || curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env" 2>/dev/null || true
+          install_from_source
+        else
+          OS="$(uname -s)"
+          ARCH="$(uname -m)"
+          case "$OS" in
+            Linux)  TARGET="x86_64-unknown-linux-gnu"; EXT="tar.gz"; BIN="prove" ;;
+            Darwin)
+              if [[ "$ARCH" == "arm64" ]]; then TARGET="aarch64-apple-darwin"; else TARGET="x86_64-apple-darwin"; fi
+              EXT="tar.gz"; BIN="prove"
+              ;;
+            MINGW*|MSYS*|CYGWIN*) TARGET="x86_64-pc-windows-msvc"; EXT="zip"; BIN="prove.exe" ;;
+            *) TARGET="x86_64-unknown-linux-gnu"; EXT="tar.gz"; BIN="prove" ;;
+          esac
+
+          if [[ -z "${PROVE_VERSION}" ]]; then
+            PROVE_VERSION="$(gh api repos/AyanB123/prove/releases/latest --jq .tag_name 2>/dev/null || true)"
+          fi
+          if [[ -z "${PROVE_VERSION}" ]]; then
+            PROVE_VERSION="$(curl -fsSL https://api.github.com/repos/AyanB123/prove/releases/latest | sed -n 's/.*"tag_name": "\(.*\)".*/\1/p' | head -1)"
+          fi
+
+          OK=0
+          if [[ -n "${PROVE_VERSION}" ]]; then
+            STAGE="prove-${PROVE_VERSION}-${TARGET}"
+            URL="https://github.com/AyanB123/prove/releases/download/${PROVE_VERSION}/${STAGE}.${EXT}"
+            echo "Trying prebuilt: $URL"
+            TMP="${RUNNER_TEMP}/prove-dl"
+            mkdir -p "$TMP"
+            if curl -fsSL "$URL" -o "$TMP/pkg.${EXT}"; then
+              if [[ "$EXT" == "zip" ]]; then
+                unzip -q "$TMP/pkg.${EXT}" -d "$TMP/out"
+              else
+                tar -xzf "$TMP/pkg.${EXT}" -C "$TMP/out" 2>/dev/null || (mkdir -p "$TMP/out" && tar -xzf "$TMP/pkg.${EXT}" -C "$TMP/out")
+              fi
+              FOUND="$(find "$TMP" -type f -name "$BIN" | head -1 || true)"
+              if [[ -n "$FOUND" ]]; then
+                cp "$FOUND" "$INSTALL_DIR/$BIN"
+                chmod +x "$INSTALL_DIR/$BIN" || true
+                OK=1
+                echo "Installed prebuilt prove ${PROVE_VERSION} ($TARGET)"
+              fi
+            else
+              echo "Prebuilt download failed"
+            fi
+          fi
+
+          if [[ "$OK" -ne 1 ]]; then
+            echo "Falling back to source build"
+            if ! command -v cargo >/dev/null 2>&1; then
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              source "$HOME/.cargo/env"
+            fi
+            install_from_source
+          fi
+        fi
+
+        echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+        export PATH="$INSTALL_DIR:$PATH"
+        prove --version || "$INSTALL_DIR"/prove --version || "$INSTALL_DIR"/prove.exe --version
 
     - name: Ensure policy
       shell: bash
       working-directory: ${{ inputs.working_directory }}
       run: |
         set -euo pipefail
+        export PATH="${RUNNER_TEMP}/prove-bin:$PATH"
         if [[ ! -f "${{ inputs.policy_path }}" ]]; then
           echo "No ${{ inputs.policy_path }} — running prove init"
           prove init
@@ -70,6 +140,7 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       run: |
         set -euo pipefail
+        export PATH="${RUNNER_TEMP}/prove-bin:$PATH"
         ARGS=(verify --ci --json)
         if [[ "${{ inputs.require_done }}" == "true" ]]; then
           ARGS+=(--require-done)

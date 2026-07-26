@@ -7,3 +7,8 @@ __pycache__/
 *.pyc
 .DS_Store
 demos/output/frames/
+
+extensions/vscode-prove/out/
+extensions/vscode-prove/node_modules/
+extensions/vscode-prove/*.vsix
+
