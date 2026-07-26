@@ -115,11 +115,7 @@ impl ReceiptStore {
                     for_hash.receipt_id = String::new();
                     let body = serde_json::to_vec(&for_hash)?;
                     let payload = crate::seal::sealing_payload(&body);
-                    receipt.seal = Some(crate::seal::ReceiptSeal {
-                        alg: "hmac-sha256".into(),
-                        key_id: key.key_id.clone(),
-                        signature: key.sign_hex(&payload),
-                    });
+                    receipt.seal = Some(key.make_seal(&payload));
                 }
             }
         }
@@ -439,11 +435,7 @@ pub fn mint_test_receipt(
         for_hash.receipt_id = String::new();
         if let Ok(body) = serde_json::to_vec(&for_hash) {
             let payload = crate::seal::sealing_payload(&body);
-            receipt.seal = Some(crate::seal::ReceiptSeal {
-                alg: "hmac-sha256".into(),
-                key_id: key.key_id.clone(),
-                signature: key.sign_hex(&payload),
-            });
+            receipt.seal = Some(key.make_seal(&payload));
         }
     }
     // Freshness is defined as "bound to the tree we just observed".
@@ -717,10 +709,10 @@ pub fn verify_receipt_seal(prove_dir: &Path, receipt: &Receipt, require: bool) -
     let Some(key) = key else {
         return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("receipt has seal key_id={} but no local key is configured", seal.key_id) });
     };
-    if seal.key_id != key.key_id {
-        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("seal key_id mismatch: receipt={} local={}", seal.key_id, key.key_id) });
+    if seal.key_id != key.key_id() {
+        return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("seal key_id mismatch: receipt={} local={}", seal.key_id, key.key_id()) });
     }
-    if seal.alg != "hmac-sha256" {
+    if seal.alg != "hmac-sha256" && seal.alg != "ed25519" {
         return Err(AdmitError { kind: AdmitErrorKind::SealInvalid, message: format!("unsupported seal alg {}", seal.alg) });
     }
     let mut unsigned = receipt.clone();
@@ -733,3 +725,5 @@ pub fn verify_receipt_seal(prove_dir: &Path, receipt: &Receipt, require: bool) -
     }
     Ok(())
 }
+
+

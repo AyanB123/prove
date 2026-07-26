@@ -77,10 +77,16 @@ enum Commands {
 
 #[derive(Subcommand, Debug)]
 enum KeysCmd {
-    /// Generate a local HMAC key for sealing receipts (.prove/keys)
-    Init,
+    /// Generate a local seal key (.prove/keys). Default alg: ed25519
+    Init {
+        /// Seal algorithm: ed25519 (default) or hmac-sha256
+        #[arg(long, default_value = "ed25519")]
+        alg: String,
+    },
     /// Show whether a local seal key is configured
     Status,
+    /// Print the local public key (ed25519) for multi-party handoff
+    Pubkey,
 }
 
 #[derive(Subcommand, Debug)]
@@ -248,18 +254,62 @@ fn real_main() -> anyhow::Result<()> {
             }
         },
         Commands::Keys { cmd } => match cmd {
-            KeysCmd::Init => {
+            KeysCmd::Init { alg } => {
                 let store = ProveStore::discover(&cwd)?;
                 store.ensure_initialized()?;
-                let key = prove::seal::LocalKey::init(&store.prove_dir)?;
-                println!("{} seal key ready (key_id={}) at {}", "✓".green().bold(), key.key_id, key.path.display());
-                println!("{}", "New receipts will be HMAC-sealed. Keep .prove/keys/ private.".dimmed());
+                let alg = prove::seal::SealAlg::parse(&alg)?;
+                let key = prove::seal::LocalKey::init(&store.prove_dir, alg)?;
+                println!(
+                    "{} seal key ready alg={} key_id={} at {}",
+                    "✓".green().bold(),
+                    key.alg().as_str(),
+                    key.key_id(),
+                    key.path().display()
+                );
+                if let Some(pk) = key.public_key_hex() {
+                    println!("public  {}", pk);
+                }
+                println!(
+                    "{}",
+                    "New receipts will be sealed. Keep .prove/keys/* private.".dimmed()
+                );
             }
             KeysCmd::Status => {
                 let store = ProveStore::discover(&cwd)?;
                 match prove::seal::LocalKey::load(&store.prove_dir)? {
-                    Some(k) => println!("{} seal key present key_id={} path={}", "✓".green().bold(), k.key_id, k.path.display()),
-                    None => println!("{} no seal key — run `prove keys init`", "·".yellow()),
+                    Some(k) => {
+                        println!(
+                            "{} seal key present alg={} key_id={} path={}",
+                            "✓".green().bold(),
+                            k.alg().as_str(),
+                            k.key_id(),
+                            k.path().display()
+                        );
+                        if let Some(pk) = k.public_key_hex() {
+                            println!("public  {}", &pk[..16.min(pk.len())]);
+                        }
+                    }
+                    None => println!(
+                        "{} no seal key — run `prove keys init`",
+                        "·".yellow()
+                    ),
+                }
+            }
+            KeysCmd::Pubkey => {
+                let store = ProveStore::discover(&cwd)?;
+                match prove::seal::LocalKey::load(&store.prove_dir)? {
+                    Some(k) => match k.public_key_hex() {
+                        Some(pk) => {
+                            println!("alg     {}", k.alg().as_str());
+                            println!("key_id  {}", k.key_id());
+                            println!("public  {pk}");
+                        }
+                        None => anyhow::bail!(
+                            "current key alg {} has no public key (use ed25519)",
+                            k.alg().as_str()
+                        ),
+                    },
+                    None => anyhow::bail!("no seal key — run `prove keys init --alg ed25519`"),
                 }
             }
         },
@@ -418,4 +468,5 @@ fn find_prove_source_root(start: &std::path::Path) -> anyhow::Result<PathBuf> {
         }
     }
 }
+
 

@@ -497,7 +497,7 @@ fn run_require_sealed_receipts_trap() -> Result<TrapResult> {
     let re = receipts::admit_test_receipt(&tmp, &policy, &receipt)?;
     let blocked = re.is_err() || admit_mint.is_err();
     // Now with keys, should admit
-    let _key = crate::seal::LocalKey::init(&store.prove_dir)?;
+    let _key = crate::seal::LocalKey::init(&store.prove_dir, crate::seal::SealAlg::Ed25519)?;
     let (receipt2, _admit2) = receipts::mint_test_receipt(
         &tmp,
         "reqseal2",
@@ -586,4 +586,5 @@ fn copy_dir(src: &Path, dst: &Path) -> Result<()> {
     }
     Ok(())
 }
+
 

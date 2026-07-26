@@ -1,22 +1,15 @@
 # Roadmap
 
-## v0.1 — shock MVP — DONE
-- [x] Lifecycle + receipts + traps + demo
+## DONE
+- [x] v0.1 core proof-or-stop + multi-CLI + traps + demo
+- [x] v0.2 CI Action, binaries, VS Code extension, HMAC seals
+- [x] v0.3 sandbox + require_sealed_receipts + receipt webview
+- [x] v0.3.1 Ed25519 seals (`prove keys init`, `keys pubkey`)
 
-## v0.2 — CI + IDE + seals — DONE
-- [x] verify --ci, GitHub Action, binaries, VS Code extension, HMAC seals
-
-## v0.3 — trust hardening — DONE
-- [x] Sandboxed gate commands (standard/strict)
-- [x] `require_sealed_receipts` policy enforcement
-- [x] Trap suite 11/11 (false-done prove 0)
-
-## v0.3.x polish
-- [x] Extension receipt webview (VSIX 0.3.0)`n- [ ] Marketplace publish
-- [ ] Ed25519 multi-party seals
+## OPEN
+- [ ] Marketplace publish (VS Code)
+- [ ] Multi-party seal quorum (multiple ed25519 keys)
 - [ ] Full OS container sandbox
-
-## v0.5 — team
-- [ ] Shared mission bus / policy server
+- [ ] Team mission bus / policy server
 - [ ] Cost accounting
-
+- [ ] Human: Show HN / job applications
