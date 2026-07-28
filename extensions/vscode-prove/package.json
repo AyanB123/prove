@@ -2,7 +2,7 @@
   "name": "prove",
   "displayName": "Prove",
   "description": "Evidence-gated control plane for coding agents. Mission status, sealed receipts, and prove verify — don't trust the agent, trust the evidence.",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "publisher": "ayanb123",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Testing", "Other", "Linters"],
@@ -119,3 +119,4 @@
   "homepage": "https://github.com/AyanB123/prove#readme",
   "license": "Apache-2.0"
 }
+
